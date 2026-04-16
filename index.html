@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Chi - Thu - Góp vốn | Lamtoan138</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+        body {
+            font-family: 'Inter', system_ui, sans-serif;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid #e5e7eb;
+            padding: 12px 16px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f8fafc;
+            font-weight: 600;
+            color: #334155;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        .total-row {
+            font-weight: 700;
+            background-color: #e0f2fe !important;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 min-h-screen">
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen"
+        class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-700">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8">
+            <div class="flex flex-col items-center mb-8">
+                <div class="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center text-4xl mb-4">💰</div>
+                <h1 class="text-3xl font-semibold text-slate-900">Quản lý Tài chính</h1>
+                <p class="text-slate-500 mt-2">Tài khoản cá nhân • Lamtoan138</p>
+            </div>
+
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">ID</label>
+                    <input id="login-id" type="text" value="Lamtoan138"
+                        class="w-full px-4 py-3 border border-slate-300 rounded-2xl focus:outline-none focus:border-blue-500 text-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Mật khẩu</label>
+                    <input id="login-pass" type="password" value=""
+                        class="w-full px-4 py-3 border border-slate-300 rounded-2xl focus:outline-none focus:border-blue-500 text-lg">
+                </div>
+
+                <button onclick="handleLogin()"
+                    class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-lg rounded-3xl transition-all active:scale-95">
+                    Đăng nhập
+                </button>
+
+                <p id="login-error" class="text-red-500 text-center text-sm hidden">ID hoặc mật khẩu không đúng!</p>
+            </div>
+
+            <div class="mt-8 text-center text-xs text-slate-400">
+                Dữ liệu được lưu trên trình duyệt (localStorage)<br>
+                Chỉ bạn mới truy cập được
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN DASHBOARD (hidden initially) -->
+    <div id="main-screen" class="hidden min-h-screen">
+        <!-- Header -->
+        <div class="bg-white border-b sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-x-3">
+                    <div class="text-3xl">💰</div>
+                    <div>
+                        <h1 class="text-2xl font-semibold text-slate-900">Quản lý Chi - Thu - Góp vốn</h1>
+                        <p class="text-slate-500 text-sm">Tài khoản: <span
+                                class="font-medium text-emerald-600">Lamtoan138</span></p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-x-4">
+                    <!-- Month selector -->
+                    <div class="flex items-center gap-x-2 bg-slate-100 rounded-3xl px-4 py-2">
+                        <span class="text-sm font-medium text-slate-500">Tháng:</span>
+                        <input id="month-picker" type="month"
+                            class="bg-transparent font-medium focus:outline-none text-slate-700">
+                    </div>
+
+                    <button onclick="logout()"
+                        class="px-6 py-2 text-sm font-medium text-slate-500 hover:text-slate-700 flex items-center gap-x-2">
+                        <span>Đăng xuất</span>
+                        <span class="text-xl">👤</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-6 py-8">
+            <!-- Add new entry form -->
+            <div class="bg-white rounded-3xl shadow-sm border p-6 mb-8">
+                <h2 class="text-xl font-semibold mb-6 flex items-center gap-x-2">
+                    <span>📌</span> Thêm giao dịch mới
+                </h2>
+
+                <form id="entry-form" onsubmit="handleSubmit(event)" class="grid grid-cols-2 md:grid-cols-7 gap-6">
+                    <!-- Ngày (tự động lưu thời gian khi submit) -->
+                    <div class="md:col-span-1">
+                        <label class="block text-xs font-medium text-slate-500 mb-1">NGÀY</label>
+                        <input id="input-date" type="date"
+                            class="w-full px-4 py-3 border border-slate-300 rounded-2xl focus:border-blue-500">
+                    </div>
+
+                    <!-- CHI TIẾT (chi) -->
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">CHI TIẾT</label>
+                        <input id="input-chi-tiet-chi" type="text" placeholder="Mô tả khoản chi"
+                            class="w-full px-4 py-3 border border-slate-300 rounded-2xl focus:border-blue-500">
+                    </div>
+
+                    <!-- KHOẢN CHI -->
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">KHOẢN CHI</label>
+                        <input id="input-khoan-chi" type="number" step="1000" placeholder="0"
+                            class="w-full px-4 py-3 border border-slate-300 rounded-2xl focus:border-blue-500 text-right font-medium">
+                    </div>
+
+                    <!-- CHI TIẾT (thu) -->
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">CHI TIẾT</label>
+                        <input id="input-chi-tiet-thu" type="text" placeholder="Mô tả khoản thu"
+                            class="w-full px-4 py-3 border border-slate-300 rounded-2xl focus:border-blue-500">
+                    </div>
+
+                    <!-- KHOẢN THU -->
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">KHOẢN THU</label>
+                        <input id="input-khoan-thu" type="number" step="1000" placeholder="0"
+                            class="w-full px-4 py-3 border border-slate-300 rounded-2xl focus:border-blue-500 text-right font-medium">
+                    </div>
+
+                    <!-- GÓP VỐN -->
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">GÓP VỐN</label>
+                        <input id="input-gop-von" type="number" step="1000" placeholder="0"
+                            class="w-full px-4 py-3 border border-slate-300 rounded-2xl focus:border-blue-500 text-right font-medium">
+                    </div>
+
+                    <!-- CHI TIẾT (góp vốn) -->
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">CHI TIẾT</label>
+                        <input id="input-chi-tiet-gop" type="text" placeholder="Mô tả góp vốn"
+                            class="w-full px-4 py-3 border border-slate-300 rounded-2xl focus:border-blue-500">
+                    </div>
+
+                    <div class="md:col-span-7 flex justify-end pt-2">
+                        <button type="button" onclick="clearForm()"
+                            class="px-8 py-3 text-slate-500 font-medium mr-3 hover:bg-slate-100 rounded-3xl">
+                            Xóa form
+                        </button>
+                        <button id="submit-btn" type="submit"
+                            class="px-10 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-3xl flex items-center gap-x-2 transition-all">
+                            <span id="btn-text">💾 Lưu giao dịch</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Data Table -->
+            <div class="bg-white rounded-3xl shadow-sm border overflow-hidden">
+                <div class="px-6 py-4 border-b flex justify-between items-center bg-slate-50">
+                    <h2 class="font-semibold text-lg">Bảng giao dịch</h2>
+                    <div class="flex items-center gap-x-3 text-sm">
+                        <button onclick="exportToCSV()"
+                            class="flex items-center gap-x-2 bg-blue-600 text-white px-6 py-2 rounded-3xl hover:bg-blue-700 font-medium">
+                            📤 Xuất Excel (CSV)
+                        </button>
+                        <button onclick="deleteAllData()"
+                            class="flex items-center gap-x-2 text-red-600 hover:text-red-700 px-6 py-2 rounded-3xl hover:bg-red-50 font-medium">
+                            🗑️ Xóa toàn bộ dữ liệu
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm" id="data-table">
+                        <thead>
+                            <tr>
+                                <th class="w-12">STT</th>
+                                <th class="w-28">NGÀY</th>
+                                <th>CHI TIẾT</th>
+                                <th class="text-right w-32">KHOẢN CHI</th>
+                                <th>CHI TIẾT</th>
+                                <th class="text-right w-32">KHOẢN THU</th>
+                                <th class="text-right w-32">GÓP VỐN</th>
+                                <th>CHI TIẾT</th>
+                                <th class="w-24 text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body" class="text-slate-700"></tbody>
+                        <tfoot id="table-foot"></tfoot>
+                    </table>
+                </div>
+
+                <div id="empty-state" class="hidden px-6 py-16 text-center">
+                    <div class="text-6xl mb-4">📭</div>
+                    <p class="text-slate-400 font-medium">Chưa có giao dịch nào trong tháng này</p>
+                    <p class="text-slate-400 text-sm mt-2">Hãy thêm giao dịch mới ở form bên trên</p>
+                </div>
+            </div>
+
+            <div class="mt-6 text-xs text-slate-400 text-center">
+                Dữ liệu được lưu tự động • Thời gian lưu được ghi nhận chính xác khi nhấn "Lưu"<br>
+                Hosting 24/7 miễn phí trên Netlify / GitHub Pages / Vercel
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== CONFIG ====================
+        const USER_ID = "Lamtoan138";
+        const PASSWORD = "thienphuc09@";
+
+        // ==================== DATA STRUCTURE ====================
+        let entries = [];
+        let currentEditingId = null;
+
+        // Load data from localStorage
+        function loadData() {
+            const saved = localStorage.getItem('financeEntries_Lamtoan138');
+            entries = saved ? JSON.parse(saved) : [];
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem('financeEntries_Lamtoan138', JSON.stringify(entries));
+        }
+
+        // Generate simple unique ID
+        function generateId() {
+            return 'entry-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+        }
+
+        // ==================== LOGIN ====================
+        function handleLogin() {
+            const id = document.getElementById('login-id').value.trim();
+            const pass = document.getElementById('login-pass').value.trim();
+            const errorEl = document.getElementById('login-error');
+
+            if (id === USER_ID && pass === PASSWORD) {
+                errorEl.classList.add('hidden');
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('main-screen').classList.remove('hidden');
+
+                // Initialize dashboard
+                initDashboard();
+            } else {
+                errorEl.classList.remove('hidden');
+            }
+        }
+
+        function logout() {
+            if (confirm('Đăng xuất và quay lại màn hình đăng nhập?')) {
+                document.getElementById('main-screen').classList.add('hidden');
+                document.getElementById('login-screen').classList.remove('hidden');
+                document.getElementById('login-pass').value = '';
+            }
+        }
+
+        // ==================== DASHBOARD INIT ====================
+        function initDashboard() {
+            loadData();
+
+            // Set default month to current month
+            const today = new Date();
+            const currentMonth = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0');
+            document.getElementById('month-picker').value = currentMonth;
+
+            // Event listeners
+            document.getElementById('month-picker').addEventListener('change', renderTable);
+
+            // Set default date for new entries = today
+            const dateInput = document.getElementById('input-date');
+            dateInput.value = today.toISOString().split('T')[0];
+
+            renderTable();
+        }
+
+        // ==================== RENDER TABLE ====================
+        function renderTable() {
+            const selectedMonth = document.getElementById('month-picker').value; // YYYY-MM
+            const tbody = document.getElementById('table-body');
+            const tfoot = document.getElementById('table-foot');
+            const emptyState = document.getElementById('empty-state');
+
+            tbody.innerHTML = '';
+            tfoot.innerHTML = '';
+
+            // Filter entries for the selected month
+            const filtered = entries
+                .filter(entry => entry.date.startsWith(selectedMonth))
+                .sort((a, b) => a.date.localeCompare(b.date));
+
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+
+            let totalChi = 0;
+            let totalThu = 0;
+            let totalGop = 0;
+
+            filtered.forEach((entry, index) => {
+                const chi = parseFloat(entry.khoanChi) || 0;
+                const thu = parseFloat(entry.khoanThu) || 0;
+                const gop = parseFloat(entry.gopVon) || 0;
+
+                totalChi += chi;
+                totalThu += thu;
+                totalGop += gop;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="font-medium">${index + 1}</td>
+                    <td>${entry.date}</td>
+                    <td class="max-w-xs truncate">${entry.chiTietChi || ''}</td>
+                    <td class="text-right font-medium text-red-600">${chi.toLocaleString('vi-VN')}</td>
+                    <td class="max-w-xs truncate">${entry.chiTietThu || ''}</td>
+                    <td class="text-right font-medium text-emerald-600">${thu.toLocaleString('vi-VN')}</td>
+                    <td class="text-right font-medium text-amber-600">${gop.toLocaleString('vi-VN')}</td>
+                    <td class="max-w-xs truncate">${entry.chiTietGop || ''}</td>
+                    <td class="text-center">
+                        <button onclick="editEntry('${entry.id}')" class="text-blue-600 hover:text-blue-700 mx-1">✏️</button>
+                        <button onclick="deleteEntry('${entry.id}')" class="text-red-600 hover:text-red-700 mx-1">🗑️</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Total row
+            const totalRow = document.createElement('tr');
+            totalRow.className = 'total-row';
+            totalRow.innerHTML = `
+                <td colspan="3" class="text-right font-bold">TỔNG CỘNG (tháng ${selectedMonth})</td>
+                <td class="text-right font-bold text-red-600">${totalChi.toLocaleString('vi-VN')}</td>
+                <td></td>
+                <td class="text-right font-bold text-emerald-600">${totalThu.toLocaleString('vi-VN')}</td>
+                <td class="text-right font-bold text-amber-600">${totalGop.toLocaleString('vi-VN')}</td>
+                <td colspan="2"></td>
+            `;
+            tfoot.appendChild(totalRow);
+        }
+
+        // ==================== FORM HANDLING ====================
+        function handleSubmit(e) {
+            e.preventDefault();
+
+            const date = document.getElementById('input-date').value;
+            if (!date) {
+                alert('Vui lòng chọn ngày!');
+                return;
+            }
+
+            const entry = {
+                id: currentEditingId || generateId(),
+                date: date,
+                chiTietChi: document.getElementById('input-chi-tiet-chi').value.trim(),
+                khoanChi: parseFloat(document.getElementById('input-khoan-chi').value) || 0,
+                chiTietThu: document.getElementById('input-chi-tiet-thu').value.trim(),
+                khoanThu: parseFloat(document.getElementById('input-khoan-thu').value) || 0,
+                gopVon: parseFloat(document.getElementById('input-gop-von').value) || 0,
+                chiTietGop: document.getElementById('input-chi-tiet-gop').value.trim()
+            };
+
+            if (currentEditingId) {
+                // Update existing
+                const index = entries.findIndex(e => e.id === currentEditingId);
+                if (index !== -1) entries[index] = entry;
+                currentEditingId = null;
+                document.getElementById('btn-text').textContent = '💾 Lưu giao dịch';
+            } else {
+                // New entry
+                entries.unshift(entry); // newest first
+            }
+
+            saveData();
+            renderTable();
+            clearForm();
+
+            // Show success toast
+            showToast('✅ Đã lưu giao dịch và ghi thời gian!');
+        }
+
+        function clearForm() {
+            document.getElementById('entry-form').reset();
+            currentEditingId = null;
+            document.getElementById('btn-text').textContent = '💾 Lưu giao dịch';
+            // Reset date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('input-date').value = today;
+        }
+
+        function editEntry(id) {
+            const entry = entries.find(e => e.id === id);
+            if (!entry) return;
+
+            currentEditingId = id;
+
+            document.getElementById('input-date').value = entry.date;
+            document.getElementById('input-chi-tiet-chi').value = entry.chiTietChi || '';
+            document.getElementById('input-khoan-chi').value = entry.khoanChi || '';
+            document.getElementById('input-chi-tiet-thu').value = entry.chiTietThu || '';
+            document.getElementById('input-khoan-thu').value = entry.khoanThu || '';
+            document.getElementById('input-gop-von').value = entry.gopVon || '';
+            document.getElementById('input-chi-tiet-gop').value = entry.chiTietGop || '';
+
+            document.getElementById('btn-text').textContent = '🔄 Cập nhật';
+
+            // Scroll to form
+            document.getElementById('entry-form').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function deleteEntry(id) {
+            if (confirm('Xóa giao dịch này?')) {
+                entries = entries.filter(e => e.id !== id);
+                saveData();
+                renderTable();
+            }
+        }
+
+        function deleteAllData() {
+            if (confirm('⚠️ XÓA TOÀN BỘ dữ liệu của tài khoản Lamtoan138?\nHành động này KHÔNG thể hoàn tác!')) {
+                entries = [];
+                saveData();
+                renderTable();
+                showToast('🗑️ Đã xóa toàn bộ dữ liệu');
+            }
+        }
+
+        // ==================== EXPORT TO EXCEL (CSV - mở được bằng Excel) ====================
+        function exportToCSV() {
+            const selectedMonth = document.getElementById('month-picker').value;
+            const filtered = entries
+                .filter(entry => entry.date.startsWith(selectedMonth))
+                .sort((a, b) => a.date.localeCompare(b.date));
+
+            if (filtered.length === 0) {
+                alert('Không có dữ liệu để xuất trong tháng này!');
+                return;
+            }
+
+            let csvContent = "STT,Ngày,CHI TIẾT,KHOẢN CHI,CHI TIẾT,KHOẢN THU,GÓP VỐN,CHI TIẾT\n";
+
+            let totalChi = 0, totalThu = 0, totalGop = 0;
+
+            filtered.forEach((entry, i) => {
+                const chi = parseFloat(entry.khoanChi) || 0;
+                const thu = parseFloat(entry.khoanThu) || 0;
+                const gop = parseFloat(entry.gopVon) || 0;
+                totalChi += chi;
+                totalThu += thu;
+                totalGop += gop;
+
+                csvContent += `${i + 1},${entry.date},"${entry.chiTietChi || ''}",${chi},"${entry.chiTietThu || ''}",${thu},${gop},"${entry.chiTietGop || ''}"\n`;
+            });
+
+            // Total row
+            csvContent += `TỔNG,,,${totalChi},,,${totalThu},${totalGop},,\n`;
+
+            const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `TaiChinh_${selectedMonth}_Lamtoan138.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showToast('📤 File CSV đã được tải về (mở bằng Excel)');
+        }
+
+        // Simple toast notification
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.style.cssText = 'position:fixed; bottom:20px; right:20px; background:#10b981; color:white; padding:16px 24px; border-radius:9999px; box-shadow:0 10px 15px -3px rgb(0 0 0 / 0.2); z-index:9999;';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.transition = 'all 0.3s';
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Tailwind script already loaded via CDN - ready to use
+    </script>
+</body>
+
+</html>
