@@ -452,65 +452,70 @@
             }
         }
 
-        // ==================== EXPORT TO EXCEL (CSV - mở được bằng Excel) ====================
-        function exportToCSV() {
-            const selectedMonth = document.getElementById('month-picker').value;
-            const filtered = entries
-                .filter(entry => entry.date.startsWith(selectedMonth))
-                .sort((a, b) => a.date.localeCompare(b.date));
-
-            if (filtered.length === 0) {
-                alert('Không có dữ liệu để xuất trong tháng này!');
-                return;
+    // ==================== IMPROVED EXPORT TO CSV ====================
+function exportToCSV() {
+    const selectedMonth = document.getElementById('month-picker').value;
+    const filtered = entries
+        .filter(entry => entry.date.startsWith(selectedMonth))
+        .sort((a, b) => a.date.localeCompare(b.date));
+    
+    if (filtered.length === 0) {
+        alert('Không có dữ liệu để xuất trong tháng này!');
+        return;
+    }
+    
+    // Header with Vietnamese text
+    let csvContent = "\uFEFF";   // BOM - fixes Vietnamese characters in Excel
+    csvContent += "STT,Ngày,CHI TIẾT (Chi),KHOẢN CHI,CHI TIẾT (Thu),KHOẢN THU,GÓP VỐN,CHI TIẾT (Góp Vốn)\n";
+    
+    let totalChi = 0, totalThu = 0, totalGop = 0;
+    
+    filtered.forEach((entry, i) => {
+        const chi = parseFloat(entry.khoanChi) || 0;
+        const thu = parseFloat(entry.khoanThu) || 0;
+        const gop = parseFloat(entry.gopVon) || 0;
+        
+        totalChi += chi;
+        totalThu += thu;
+        totalGop += gop;
+        
+        // Properly escape fields that may contain commas or quotes
+        const escape = (str) => {
+            if (!str) return '';
+            str = String(str).replace(/"/g, '""');   // escape double quotes
+            if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                return `"${str}"`;
             }
-
-            let csvContent = "STT,Ngày,CHI TIẾT,KHOẢN CHI,CHI TIẾT,KHOẢN THU,GÓP VỐN,CHI TIẾT\n";
-
-            let totalChi = 0, totalThu = 0, totalGop = 0;
-
-            filtered.forEach((entry, i) => {
-                const chi = parseFloat(entry.khoanChi) || 0;
-                const thu = parseFloat(entry.khoanThu) || 0;
-                const gop = parseFloat(entry.gopVon) || 0;
-                totalChi += chi;
-                totalThu += thu;
-                totalGop += gop;
-
-                csvContent += `${i + 1},${entry.date},"${entry.chiTietChi || ''}",${chi},"${entry.chiTietThu || ''}",${thu},${gop},"${entry.chiTietGop || ''}"\n`;
-            });
-
-            // Total row
-            csvContent += `TỔNG,,,${totalChi},,,${totalThu},${totalGop},,\n`;
-
-            const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            const url = URL.createObjectURL(blob);
-            link.setAttribute("href", url);
-            link.setAttribute("download", `TaiChinh_${selectedMonth}_Lamtoan138.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            showToast('📤 File CSV đã được tải về (mở bằng Excel)');
-        }
-
-        // Simple toast notification
-        function showToast(message) {
-            const toast = document.createElement('div');
-            toast.style.cssText = 'position:fixed; bottom:20px; right:20px; background:#10b981; color:white; padding:16px 24px; border-radius:9999px; box-shadow:0 10px 15px -3px rgb(0 0 0 / 0.2); z-index:9999;';
-            toast.textContent = message;
-            document.body.appendChild(toast);
-
-            setTimeout(() => {
-                toast.style.transition = 'all 0.3s';
-                toast.style.opacity = '0';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-
-        // Tailwind script already loaded via CDN - ready to use
-    </script>
+            return str;
+        };
+        
+        csvContent += 
+            `${i+1},` +
+            `${entry.date},` +
+            `${escape(entry.chiTietChi || '')},` +
+            `${chi},` +
+            `${escape(entry.chiTietThu || '')},` +
+            `${thu},` +
+            `${gop},` +
+            `${escape(entry.chiTietGop || '')}\n`;
+    });
+    
+    // Total row
+    csvContent += `TỔNG,,,${totalChi},,,${totalThu},${totalGop},,\n`;
+    
+    // Create and download the file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `TaiChinh_${selectedMonth}_Lamtoan138.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showToast('📤 File CSV đã được tải về. Mở bằng Excel → Data → From Text/CSV để xem tốt nhất.');
+}
 </body>
 
 </html>
