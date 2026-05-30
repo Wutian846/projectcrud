@@ -5,9 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý Chi - Thu - Góp vốn | Lamtoan138</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Firebase Imports -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+        import { 
+            getFirestore, 
+            collection, 
+            addDoc, 
+            updateDoc, 
+            deleteDoc, 
+            doc, 
+            onSnapshot, 
+            query, 
+            orderBy 
+        } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAejyPG-xi_cZnPuMYUJMeR916Ox_BNSiY",
@@ -20,8 +32,19 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        window.db = db; // Make db available globally
-        window.USER_ID = "Lamtoan138";
+
+        // Make functions available globally
+        window.firebaseDB = db;
+        window.firebaseCollection = collection;
+        window.firebaseAddDoc = addDoc;
+        window.firebaseUpdateDoc = updateDoc;
+        window.firebaseDeleteDoc = deleteDoc;
+        window.firebaseDoc = doc;
+        window.firebaseOnSnapshot = onSnapshot;
+        window.firebaseQuery = query;
+        window.firebaseOrderBy = orderBy;
+
+        console.log("✅ Firebase initialized successfully");
     </script>
 
     <style>
@@ -72,7 +95,7 @@
                     <div class="text-3xl">💰</div>
                     <div>
                         <h1 class="text-2xl font-semibold">Quản lý Chi - Thu - Góp vốn</h1>
-                        <p class="text-emerald-600 text-sm">Đang đồng bộ realtime • Lamtoan138</p>
+                        <p class="text-emerald-600 text-sm">Đang đồng bộ realtime</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-x-4">
@@ -118,7 +141,7 @@
 
                     <div class="md:col-span-7 flex justify-end gap-3">
                         <button type="button" id="clear-btn" class="px-8 py-3 text-slate-500 hover:bg-slate-100 rounded-3xl">Xóa form</button>
-                        <button type="submit" id="submit-btn" class="px-10 py-3 bg-emerald-600 text-white font-semibold rounded-3xl">💾 Lưu giao dịch</button>
+                        <button type="submit" class="px-10 py-3 bg-emerald-600 text-white font-semibold rounded-3xl">💾 Lưu giao dịch</button>
                     </div>
                 </form>
             </div>
@@ -151,10 +174,6 @@
                         <tfoot id="table-foot"></tfoot>
                     </table>
                 </div>
-                <div id="empty-state" class="hidden px-6 py-16 text-center">
-                    <div class="text-6xl mb-4">📭</div>
-                    <p class="text-slate-400">Chưa có giao dịch nào</p>
-                </div>
             </div>
         </div>
     </div>
@@ -165,12 +184,13 @@
         let unsubscribe = null;
 
         const PASSWORD = "thienphuc09@";
+        const USER_ID = "Lamtoan138";
 
         // Login
         document.getElementById('login-btn').addEventListener('click', () => {
             const id = document.getElementById('login-id').value.trim();
             const pass = document.getElementById('login-pass').value.trim();
-            if (id === window.USER_ID && pass === PASSWORD) {
+            if (id === USER_ID && pass === PASSWORD) {
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('main-screen').classList.remove('hidden');
                 initDashboard();
@@ -193,10 +213,10 @@
         function loadRealtimeData() {
             if (unsubscribe) unsubscribe();
 
-            const colRef = collection(window.db, `finance_${window.USER_ID}`);
-            const q = query(colRef, orderBy("date", "desc"));
+            const colRef = window.firebaseCollection(window.firebaseDB, `finance_${USER_ID}`);
+            const q = window.firebaseQuery(colRef, window.firebaseOrderBy("date", "desc"));
 
-            unsubscribe = onSnapshot(q, (snapshot) => {
+            unsubscribe = window.firebaseOnSnapshot(q, (snapshot) => {
                 entries = [];
                 snapshot.forEach((d) => {
                     entries.push({ id: d.id, ...d.data() });
@@ -209,7 +229,7 @@
             const selectedMonth = document.getElementById('month-picker').value;
             const tbody = document.getElementById('table-body');
             const tfoot = document.getElementById('table-foot');
-            const emptyState = document.getElementById('empty-state');
+            const emptyState = document.getElementById('empty-state') || document.createElement('div');
 
             tbody.innerHTML = '';
             tfoot.innerHTML = '';
@@ -217,10 +237,9 @@
             const filtered = entries.filter(e => e.date && e.date.startsWith(selectedMonth));
 
             if (filtered.length === 0) {
-                emptyState.classList.remove('hidden');
+                // Show empty state if needed
                 return;
             }
-            emptyState.classList.add('hidden');
 
             let totalChi = 0, totalThu = 0, totalGop = 0;
 
@@ -248,9 +267,9 @@
                 tbody.appendChild(row);
             });
 
-            const tr = document.createElement('tr');
-            tr.className = 'total-row';
-            tr.innerHTML = `
+            const totalRow = document.createElement('tr');
+            totalRow.className = 'total-row';
+            totalRow.innerHTML = `
                 <td colspan="3" class="text-right font-bold">TỔNG CỘNG</td>
                 <td class="text-right font-bold text-red-600">${totalChi.toLocaleString('vi-VN')}</td>
                 <td></td>
@@ -258,7 +277,7 @@
                 <td class="text-right font-bold text-amber-600">${totalGop.toLocaleString('vi-VN')}</td>
                 <td colspan="2"></td>
             `;
-            tfoot.appendChild(tr);
+            tfoot.appendChild(totalRow);
         }
 
         // Form Submit
@@ -280,15 +299,21 @@
 
             try {
                 if (currentEditingId) {
-                    await updateDoc(doc(window.db, `finance_${window.USER_ID}`, currentEditingId), entryData);
+                    await window.firebaseUpdateDoc(
+                        window.firebaseDoc(window.firebaseDB, `finance_${USER_ID}`, currentEditingId), 
+                        entryData
+                    );
                 } else {
-                    await addDoc(collection(window.db, `finance_${window.USER_ID}`), entryData);
+                    await window.firebaseAddDoc(
+                        window.firebaseCollection(window.firebaseDB, `finance_${USER_ID}`), 
+                        entryData
+                    );
                 }
                 clearForm();
-                showToast(currentEditingId ? '✅ Cập nhật thành công!' : '✅ Đã lưu vào Cloud!');
+                showToast('✅ Đã lưu vào Cloud!');
             } catch (error) {
                 console.error(error);
-                alert('Lỗi khi lưu dữ liệu!');
+                alert('Lỗi kết nối Firebase!');
             }
         });
 
@@ -298,11 +323,10 @@
             document.getElementById('input-date').value = new Date().toISOString().split('T')[0];
         }
 
-        window.editEntry = async (id) => {
+        window.editEntry = (id) => {
             const entry = entries.find(e => e.id === id);
             if (!entry) return;
             currentEditingId = id;
-
             document.getElementById('input-date').value = entry.date;
             document.getElementById('input-chi-tiet-chi').value = entry.chiTietChi || '';
             document.getElementById('input-khoan-chi').value = entry.khoanChi || '';
@@ -315,8 +339,9 @@
         window.deleteEntry = async (id) => {
             if (confirm('Xóa giao dịch này?')) {
                 try {
-                    await deleteDoc(doc(window.db, `finance_${window.USER_ID}`, id));
-                    showToast('🗑️ Đã xóa');
+                    await window.firebaseDeleteDoc(
+                        window.firebaseDoc(window.firebaseDB, `finance_${USER_ID}`, id)
+                    );
                 } catch (e) {
                     alert('Lỗi khi xóa!');
                 }
@@ -324,24 +349,8 @@
         };
 
         document.getElementById('clear-btn').addEventListener('click', clearForm);
-        document.getElementById('delete-all-btn').addEventListener('click', async () => {
-            if (confirm('XÓA TOÀN BỘ dữ liệu? Không thể hoàn tác!')) {
-                // Note: Deleting all documents one by one (not efficient but simple)
-                for (let entry of entries) {
-                    await deleteDoc(doc(window.db, `finance_${window.USER_ID}`, entry.id));
-                }
-            }
-        });
 
-        function showToast(msg) {
-            const t = document.createElement('div');
-            t.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#10b981;color:white;padding:14px 24px;border-radius:9999px;z-index:9999;';
-            t.textContent = msg;
-            document.body.appendChild(t);
-            setTimeout(() => t.remove(), 2500);
-        }
-
-        // Export function (same as before)
+        // Export
         document.getElementById('export-btn').addEventListener('click', () => {
             const selectedMonth = document.getElementById('month-picker').value;
             const filtered = entries.filter(e => e.date && e.date.startsWith(selectedMonth));
@@ -367,7 +376,13 @@
             link.click();
         });
 
-        console.log("✅ Full Firebase version loaded - Data synced across devices");
+        function showToast(msg) {
+            const t = document.createElement('div');
+            t.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#10b981;color:white;padding:14px 24px;border-radius:9999px;z-index:9999;';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 2500);
+        }
     </script>
 </body>
 </html>
