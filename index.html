@@ -6,7 +6,7 @@
     <title>Quản lý Chi - Thu - Góp vốn | Lamtoan138</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Firebase Imports -->
+    <!-- Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
         import { 
@@ -27,13 +27,14 @@
             projectId: "wtver-f831b",
             storageBucket: "wtver-f831b.firebasestorage.app",
             messagingSenderId: "210899208439",
-            appId: "1:210899208439:web:42489e9fee44bb53b4ebf2"
+            appId: "1:210899208439:web:4c0f046b0c05f700b4ebf2",
+            measurementId: "G-1H7BPL0LC3"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Make functions available globally
+        // Export Firebase functions globally
         window.firebaseDB = db;
         window.firebaseCollection = collection;
         window.firebaseAddDoc = addDoc;
@@ -44,7 +45,7 @@
         window.firebaseQuery = query;
         window.firebaseOrderBy = orderBy;
 
-        console.log("✅ Firebase initialized successfully");
+        console.log("✅ Firebase connected with new config");
     </script>
 
     <style>
@@ -59,7 +60,7 @@
 </head>
 <body class="bg-slate-50 min-h-screen">
 
-    <!-- LOGIN SCREEN -->
+    <!-- LOGIN -->
     <div id="login-screen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-700">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8">
             <div class="flex flex-col items-center mb-8">
@@ -87,7 +88,7 @@
         </div>
     </div>
 
-    <!-- MAIN SCREEN -->
+    <!-- MAIN DASHBOARD -->
     <div id="main-screen" class="hidden min-h-screen">
         <div class="bg-white border-b sticky top-0 z-50">
             <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -95,7 +96,7 @@
                     <div class="text-3xl">💰</div>
                     <div>
                         <h1 class="text-2xl font-semibold">Quản lý Chi - Thu - Góp vốn</h1>
-                        <p class="text-emerald-600 text-sm">Đang đồng bộ realtime</p>
+                        <p class="text-emerald-600 text-sm">Đang đồng bộ Cloud Realtime</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-x-4">
@@ -106,7 +107,7 @@
         </div>
 
         <div class="max-w-7xl mx-auto px-6 py-8">
-            <!-- Form -->
+            <!-- Add Form -->
             <div class="bg-white rounded-3xl shadow p-6 mb-8">
                 <h2 class="text-xl font-semibold mb-6">📌 Thêm giao dịch mới</h2>
                 <form id="entry-form" class="grid grid-cols-2 md:grid-cols-7 gap-6">
@@ -229,17 +230,13 @@
             const selectedMonth = document.getElementById('month-picker').value;
             const tbody = document.getElementById('table-body');
             const tfoot = document.getElementById('table-foot');
-            const emptyState = document.getElementById('empty-state') || document.createElement('div');
 
             tbody.innerHTML = '';
             tfoot.innerHTML = '';
 
             const filtered = entries.filter(e => e.date && e.date.startsWith(selectedMonth));
 
-            if (filtered.length === 0) {
-                // Show empty state if needed
-                return;
-            }
+            if (filtered.length === 0) return;
 
             let totalChi = 0, totalThu = 0, totalGop = 0;
 
@@ -280,7 +277,7 @@
             tfoot.appendChild(totalRow);
         }
 
-        // Form Submit
+        // Submit Form
         document.getElementById('entry-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const date = document.getElementById('input-date').value;
@@ -299,21 +296,15 @@
 
             try {
                 if (currentEditingId) {
-                    await window.firebaseUpdateDoc(
-                        window.firebaseDoc(window.firebaseDB, `finance_${USER_ID}`, currentEditingId), 
-                        entryData
-                    );
+                    await window.firebaseUpdateDoc(window.firebaseDoc(window.firebaseDB, `finance_${USER_ID}`, currentEditingId), entryData);
                 } else {
-                    await window.firebaseAddDoc(
-                        window.firebaseCollection(window.firebaseDB, `finance_${USER_ID}`), 
-                        entryData
-                    );
+                    await window.firebaseAddDoc(window.firebaseCollection(window.firebaseDB, `finance_${USER_ID}`), entryData);
                 }
                 clearForm();
                 showToast('✅ Đã lưu vào Cloud!');
             } catch (error) {
                 console.error(error);
-                alert('Lỗi kết nối Firebase!');
+                alert('Lỗi khi lưu dữ liệu!');
             }
         });
 
@@ -339,9 +330,7 @@
         window.deleteEntry = async (id) => {
             if (confirm('Xóa giao dịch này?')) {
                 try {
-                    await window.firebaseDeleteDoc(
-                        window.firebaseDoc(window.firebaseDB, `finance_${USER_ID}`, id)
-                    );
+                    await window.firebaseDeleteDoc(window.firebaseDoc(window.firebaseDB, `finance_${USER_ID}`, id));
                 } catch (e) {
                     alert('Lỗi khi xóa!');
                 }
@@ -350,7 +339,7 @@
 
         document.getElementById('clear-btn').addEventListener('click', clearForm);
 
-        // Export
+        // Export to CSV
         document.getElementById('export-btn').addEventListener('click', () => {
             const selectedMonth = document.getElementById('month-picker').value;
             const filtered = entries.filter(e => e.date && e.date.startsWith(selectedMonth));
@@ -372,8 +361,9 @@
             const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = `TaiChinh_${selectedMonth}.csv`;
+            link.download = `TaiChinh_${selectedMonth}_Lamtoan138.csv`;
             link.click();
+            showToast('📤 Đã xuất file Excel');
         });
 
         function showToast(msg) {
