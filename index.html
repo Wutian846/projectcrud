@@ -45,7 +45,7 @@
         window.firebaseQuery = query;
         window.firebaseOrderBy = orderBy;
 
-        console.log("✅ Firebase connected with new config");
+        console.log(" Firebase connected with new config");
     </script>
 
     <style>
@@ -93,7 +93,7 @@
         <div class="bg-white border-b sticky top-0 z-50">
             <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
                 <div class="flex items-center gap-x-3">
-                    <div class="text-3xl">💰</div>
+                    <div class="text-3xl"></div>
                     <div>
                         <h1 class="text-2xl font-semibold">Quản lý Chi - Thu - Góp vốn</h1>
                         <p class="text-emerald-600 text-sm">Đang đồng bộ Cloud Realtime</p>
@@ -109,7 +109,7 @@
         <div class="max-w-9xl mx-auto px-8 py-8">
             <!-- Add Form -->
             <div class="bg-white rounded-3xl shadow p-6 mb-8">
-                <h2 class="text-xl font-semibold mb-6">📌 Thêm giao dịch mới</h2>
+                <h2 class="text-xl font-semibold mb-6"> Thêm giao dịch mới</h2>
                 <form id="entry-form" class="grid grid-cols-2 md:grid-cols-7 gap-6">
                     <div class="md:col-span-1">
                         <label class="block text-xs font-medium text-slate-500 mb-1">NGÀY</label>
@@ -257,8 +257,8 @@
                     <td class="text-right text-amber-600">${gop.toLocaleString('vi-VN')}</td>
                     <td class="max-w-xs truncate">${entry.chiTietGop || ''}</td>
                     <td class="text-center">
-                        <button onclick="editEntry('${entry.id}')" class="text-blue-600 mx-1">✏️</button>
-                        <button onclick="deleteEntry('${entry.id}')" class="text-red-600 mx-1">🗑️</button>
+                        <button onclick="editEntry('${entry.id}')" class="text-blue-600 mx-1"></button>
+                        <button onclick="deleteEntry('${entry.id}')" class="text-red-600 mx-1"></button>
                     </td>
                 `;
                 tbody.appendChild(row);
@@ -301,7 +301,7 @@
                     await window.firebaseAddDoc(window.firebaseCollection(window.firebaseDB, `finance_${USER_ID}`), entryData);
                 }
                 clearForm();
-                showToast('✅ Đã lưu vào Cloud!');
+                showToast('V Đã lưu vào Cloud!');
             } catch (error) {
                 console.error(error);
                 alert('Lỗi khi lưu dữ liệu!');
